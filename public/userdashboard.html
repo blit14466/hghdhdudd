@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - PenPalmega</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">PenPalmega</a>
+    <div class="user-menu">
+      <button class="user-menu-btn">
+        <span id="usernameDisplay">User</span>
+        <i class="fas fa-caret-down"></i>
+        <span id="notification-badge" class="notification-badge"></span>
+      </button>
+      <div class="user-dropdown">
+        <a href="/userdashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="/messages.html"><i class="fas fa-envelope"></i> Messages <span id="messageNotifications"></span></a>
+        <a href="/friends.html"><i class="fas fa-users"></i> Friends <span id="friendRequests"></span></a>
+        <a href="/settings.html"><i class="fas fa-cog"></i> Settings</a>
+        <a href="#" id="logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+  </header>
+  
+  <nav>
+    <a href="/userdashboard.html" class="active"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="/find-penpals.html"><i class="fas fa-search"></i> Find Pen Pals</a>
+    <a href="/messages.html"><i class="fas fa-envelope"></i> Messages</a>
+    <a href="/news-updates.html"><i class="fas fa-newspaper"></i> News</a>
+    <a href="/friends.html"><i class="fas fa-users"></i> Friends</a>
+  </nav>
+  
+  <main>
+    <div class="container">
+      <div class="dashboard-welcome">
+        <h1 id="welcomeMessage">Welcome back!</h1>
+        <p id="dashboardStats">Loading your activity...</p>
+      </div>
+      
+      <div class="grid grid-cols-3">
+        <div class="card">
+          <h3><i class="fas fa-users"></i> Suggested Pen Pals</h3>
+          <div id="suggestedPenpals">
+            <p>Loading suggestions...</p>
+          </div>
+          <a href="/find-penpals.html" class="button button-small" style="margin-top: 1rem;">View All Suggestions</a>
+        </div>
+        
+        <div class="card">
+          <h3><i class="fas fa-envelope"></i> Recent Messages</h3>
+          <div id="recentMessages">
+            <p>Loading messages...</p>
+          </div>
+          <a href="/messages.html" class="button button-small" style="margin-top: 1rem;">View All Messages</a>
+        </div>
+        
+        <div class="card">
+          <h3><i class="fas fa-bell"></i> Notifications</h3>
+          <div id="recentNotifications">
+            <p>Loading notifications...</p>
+          </div>
+          <a href="/friends.html" class="button button-small" style="margin-top: 1rem;">View All Notifications</a>
+        </div>
+      </div>
+      
+      <div class="card" style="margin-top: 2rem;">
+        <h3><i class="fas fa-newspaper"></i> Latest News</h3>
+        <div id="latestNews">
+          <p>Loading news...</p>
+        </div>
+        <a href="/news-updates.html" class="button button-small" style="margin-top: 1rem;">Read More News</a>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="social-links">
+      <a href="#"><i class="fab fa-facebook"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-youtube"></i></a>
+    </div>
+    <p>Contact: <a href="mailto:info@penpalmega.com">info@penpalmega.com</a></p>
+    <p>&copy; 2023 PenPalmega. All rights reserved.</p>
+  </footer>
+  
+  <script src="/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load user data
+      const user = await fetchUserData();
+      if (!user) return;
+      
+      // Set welcome message
+      document.getElementById('welcomeMessage').textContent = `Welcome back, ${user.name}!`;
+      document.getElementById('usernameDisplay').textContent = user.name;
+      
+      // Load dashboard stats
+      await loadDashboardStats();
+      
+      // Load suggested pen pals
+      await loadSuggestedPenpals();
+      
+      // Load recent messages
+      await loadRecentMessages();
+      
+      // Load notifications
+      await loadNotifications();
+      
+      // Load news
+      await loadNews();
+      
+      // Set up logout
+      document.getElementById('logout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await fetch('/logout', { method: 'GET' });
+        window.location.href = '/login.html';
+      });
+    });
+    
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/user');
+        if (!response.ok) {
+          window.location.href = '/login.html';
+          return null;
+        }
+        return await response.json();
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        window.location.href = '/login.html';
+        return null;
+      }
+    }
+    
+    async function loadDashboardStats() {
+      try {
+        const [messagesRes, friendsRes] = await Promise.all([
+          fetch('/api/messages?limit=1'),
+          fetch('/api/friend-requests')
+        ]);
+        
+        const messages = await messagesRes.json();
+        const friendRequests = await friendsRes.json();
+        
+        const unreadMessages = messages.filter(m => !m.isRead && m.to._id === user._id).length;
+        const pendingRequests = friendRequests.length;
+        
+        let statsText = '';
+        if (unreadMessages > 0) {
+          statsText += `You have <strong>${unreadMessages} new message${unreadMessages > 1 ? 's' : ''}</strong>`;
+        }
+        if (pendingRequests > 0) {
+          if (statsText) statsText += ' and ';
+          statsText += `<strong>${pendingRequests} friend request${pendingRequests > 1 ? 's' : ''}</strong>`;
+        }
+        if (!statsText) {
+          statsText = 'No new activity';
+        }
+        
+        document.getElementById('dashboardStats').innerHTML = statsText;
+      } catch (err) {
+        console.error('Error loading dashboard stats:', err);
+      }
+    }
+    
+    async function loadSuggestedPenpals() {
+      try {
+        const response = await fetch('/api/search?limit=3');
+        const users = await response.json();
+        
+        const suggestionsHtml = users.map(user => `
+          <div class="suggestion-item">
+            <img src="${user.profilePicture || '/images/default-avatar.png'}" class="suggestion-avatar">
+            <div class="suggestion-info">
+              <strong>${user.name}</strong>
+              <p>${user.city}, ${user.country}</p>
+              <a href="/view-profile.html?id=${user._id}" class="button button-small">View Profile</a>
+            </div>
+          </div>
+        `).join('');
+        
+        document.getElementById('suggestedPenpals').innerHTML = suggestionsHtml || '<p>No suggestions found</p>';
+      } catch (err) {
+        console.error('Error loading suggestions:', err);
+        document.getElementById('suggestedPenpals').innerHTML = '<p>Error loading suggestions</p>';
+      }
+    }
+    
+    async function loadRecentMessages() {
+      try {
+        const response = await fetch('/api/messages?limit=3');
+        const messages = await response.json();
+        
+        const messagesHtml = messages.map(msg => `
+          <div class="message-item ${!msg.isRead && msg.to._id === user._id ? 'unread' : ''}">
+            <img src="${msg.from.profilePicture || '/images/default-avatar.png'}" class="message-avatar">
+            <div class="message-content">
+              <strong>${msg.from.name}</strong>
+              <p>${msg.content.substring(0, 30)}${msg.content.length > 30 ? '...' : ''}</p>
+            </div>
+            <div class="message-time">${new Date(msg.createdAt).toLocaleTimeString()}</div>
+          </div>
+        `).join('');
+        
+        document.getElementById('recentMessages').innerHTML = messagesHtml || '<p>No messages yet</p>';
+      } catch (err) {
+        console.error('Error loading messages:', err);
+        document.getElementById('recentMessages').innerHTML = '<p>Error loading messages</p>';
+      }
+    }
+    
+    async function loadNotifications() {
+      try {
+        const response = await fetch('/api/friend-requests');
+        const requests = await response.json();
+        
+        const notificationsHtml = requests.map(req => `
+          <div class="notification-item">
+            <img src="${req.from.profilePicture || '/images/default-avatar.png'}" class="notification-avatar">
+            <div class="notification-content">
+              <strong>${req.from.name}</strong> sent you a friend request
+              <div class="notification-actions">
+                <button class="button button-small accept-request" data-id="${req._id}">Accept</button>
+                <button class="button button-small reject-request" data-id="${req._id}">Reject</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        
+        document.getElementById('recentNotifications').innerHTML = 
+          notificationsHtml || '<p>No new notifications</p>';
+          
+        // Add event listeners for accept/reject buttons
+        document.querySelectorAll('.accept-request').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const requestId = e.target.dataset.id;
+            await respondToFriendRequest(requestId, 'accepted');
+          });
+        });
+        
+        document.querySelectorAll('.reject-request').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const requestId = e.target.dataset.id;
+            await respondToFriendRequest(requestId, 'rejected');
+          });
+        });
+      } catch (err) {
+        console.error('Error loading notifications:', err);
+        document.getElementById('recentNotifications').innerHTML = '<p>Error loading notifications</p>';
+      }
+    }
+    
+    async function respondToFriendRequest(requestId, status) {
+      try {
+        await fetch(`/api/friend-request/${requestId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        
+        // Reload notifications
+        await loadNotifications();
+        await loadDashboardStats();
+      } catch (err) {
+        console.error('Error responding to friend request:', err);
+        alert('Error responding to friend request');
+      }
+    }
+    
+    async function loadNews() {
+      try {
+        // In a real app, this would come from your database
+        const news = [
+          {
+            title: 'New Feature: Group Chats',
+            content: 'We\'ve added group chat functionality to help you connect with multiple pen pals at once!',
+            date: '2023-05-15'
+          },
+          {
+            title: 'Community Guidelines Update',
+            content: 'Please review our updated community guidelines to ensure a safe environment for all users.',
+            date: '2023-05-10'
+          }
+        ];
+        
+        const newsHtml = news.map(item => `
+          <div class="news-item">
+            <h4>${item.title}</h4>
+            <p>${item.content}</p>
+            <small>Posted on ${item.date}</small>
+          </div>
+        `).join('');
+        
+        document.getElementById('latestNews').innerHTML = newsHtml;
+      } catch (err) {
+        console.error('Error loading news:', err);
+        document.getElementById('latestNews').innerHTML = '<p>Error loading news</p>';
+      }
+    }
+  </script>
+</body>
+</html>

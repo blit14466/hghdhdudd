@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find Pen Pals - PenPalmega</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">PenPalmega</a>
+    <div class="user-menu">
+      <button class="user-menu-btn">
+        <span id="usernameDisplay">User</span>
+        <i class="fas fa-caret-down"></i>
+        <span id="notification-badge" class="notification-badge"></span>
+      </button>
+      <div class="user-dropdown">
+        <a href="/userdashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="/messages.html"><i class="fas fa-envelope"></i> Messages <span id="messageNotifications"></span></a>
+        <a href="/friends.html"><i class="fas fa-users"></i> Friends <span id="friendRequests"></span></a>
+        <a href="/settings.html"><i class="fas fa-cog"></i> Settings</a>
+        <a href="#" id="logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+  </header>
+  
+  <nav>
+    <a href="/userdashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="/find-penpals.html" class="active"><i class="fas fa-search"></i> Find Pen Pals</a>
+    <a href="/messages.html"><i class="fas fa-envelope"></i> Messages</a>
+    <a href="/news-updates.html"><i class="fas fa-newspaper"></i> News</a>
+    <a href="/friends.html"><i class="fas fa-users"></i> Friends</a>
+  </nav>
+  
+  <main>
+    <div class="container">
+      <h1>Find Pen Pals</h1>
+      
+      <div class="card">
+        <h2>Search Filters</h2>
+        <form id="searchForm" class="form">
+          <div class="form-group">
+            <label for="searchQuery">Search</label>
+            <input type="text" id="searchQuery" name="query" placeholder="Name, username, or keywords">
+          </div>
+          
+          <div class="grid grid-cols-3">
+            <div class="form-group">
+              <label for="country">Country</label>
+              <select id="country" name="country">
+                <option value="">Any Country</option>
+                <option value="US">United States</option>
+                <option value="UK">United Kingdom</option>
+                <!-- Add more countries as needed -->
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="minAge">Min Age</label>
+              <input type="number" id="minAge" name="minAge" min="13" max="100">
+            </div>
+            
+            <div class="form-group">
+              <label for="maxAge">Max Age</label>
+              <input type="number" id="maxAge" name="maxAge" min="13" max="100">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Interests</label>
+            <div class="interests-grid">
+              <label><input type="checkbox" name="interests" value="Reading"> Reading</label>
+              <label><input type="checkbox" name="interests" value="Travel"> Travel</label>
+              <label><input type="checkbox" name="interests" value="Music"> Music</label>
+              <label><input type="checkbox" name="interests" value="Sports"> Sports</label>
+              <label><input type="checkbox" name="interests" value="Cooking"> Cooking</label>
+              <label><input type="checkbox" name="interests" value="Photography"> Photography</label>
+            </div>
+          </div>
+          
+          <button type="submit" class="button">Search</button>
+          <button type="button" id="quickMatch" class="button button-secondary">Quick Match</button>
+        </form>
+      </div>
+      
+      <div class="card" style="margin-top: 2rem;">
+        <h2>Search Results</h2>
+        <div id="searchResults">
+          <p>Use the search filters above to find pen pals</p>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="social-links">
+      <a href="#"><i class="fab fa-facebook"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-youtube"></i></a>
+    </div>
+    <p>Contact: <a href="mailto:info@penpalmega.com">info@penpalmega.com</a></p>
+    <p>&copy; 2023 PenPalmega. All rights reserved.</p>
+  </footer>
+  
+  <script src="/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load user data
+      const user = await fetchUserData();
+      if (!user) return;
+      
+      document.getElementById('usernameDisplay').textContent = user.name;
+      
+      // Set up search form
+      document.getElementById('searchForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await performSearch();
+      });
+      
+      // Set up quick match
+      document.getElementById('quickMatch').addEventListener('click', async () => {
+        const response = await fetch('/api/search?limit=1');
+        const users = await response.json();
+        
+        if (users.length > 0) {
+          window.location.href = `/view-profile.html?id=${users[0]._id}`;
+        } else {
+          alert('No matches found. Try adjusting your search criteria.');
+        }
+      });
+      
+      // Set up logout
+      document.getElementById('logout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await fetch('/logout', { method: 'GET' });
+        window.location.href = '/login.html';
+      });
+    });
+    
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/user');
+        if (!response.ok) {
+          window.location.href = '/login.html';
+          return null;
+        }
+        return await response.json();
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        window.location.href = '/login.html';
+        return null;
+      }
+    }
+    
+    async function performSearch() {
+      try {
+        const formData = new FormData(document.getElementById('searchForm'));
+        const params = new URLSearchParams();
+        
+        for (const [key, value] of formData.entries()) {
+          if (value) params.append(key, value);
+        }
+        
+        // Handle checkboxes separately
+        const interests = [];
+        document.querySelectorAll('input[name="interests"]:checked').forEach(checkbox => {
+          interests.push(checkbox.value);
+        });
+        
+        if (interests.length > 0) {
+          params.append('interests', interests.join(','));
+        }
+        
+        const response = await fetch(`/api/search?${params.toString()}`);
+        const users = await response.json();
+        
+        displaySearchResults(users);
+      } catch (err) {
+        console.error('Error performing search:', err);
+        document.getElementById('searchResults').innerHTML = '<p>Error performing search</p>';
+      }
+    }
+    
+    function displaySearchResults(users) {
+      if (users.length === 0) {
+        document.getElementById('searchResults').innerHTML = '<p>No users found matching your criteria</p>';
+        return;
+      }
+      
+      const resultsHtml = users.map(user => `
+        <div class="search-result">
+          <img src="${user.profilePicture || '/images/default-avatar.png'}" class="result-avatar">
+          <div class="result-info">
+            <h3>${user.name} <small>${user.age ? user.age + ' years' : ''}</small></h3>
+            <p>${user.city ? user.city + ', ' : ''}${user.country || ''}</p>
+            <p>${user.description || ''}</p>
+            <div class="result-actions">
+              <a href="/view-profile.html?id=${user._id}" class="button button-small">View Profile</a>
+              <button class="button button-small button-secondary add-friend" data-userid="${user._id}">Add Friend</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('searchResults').innerHTML = resultsHtml;
+      
+      // Add event listeners for add friend buttons
+      document.querySelectorAll('.add-friend').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const userId = e.target.dataset.userid;
+          await sendFriendRequest(userId);
+        });
+      });
+    }
+    
+    async function sendFriendRequest(userId) {
+      try {
+        const response = await fetch('/api/friend-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: userId })
+        });
+        
+        if (response.ok) {
+          alert('Friend request sent!');
+        } else {
+          const error = await response.text();
+          alert(error);
+        }
+      } catch (err) {
+        console.error('Error sending friend request:', err);
+        alert('Error sending friend request');
+      }
+    }
+  </script>
+</body>
+</html>

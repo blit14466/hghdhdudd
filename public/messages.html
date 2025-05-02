@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages - PenPalmega</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">PenPalmega</a>
+    <div class="user-menu">
+      <button class="user-menu-btn">
+        <span id="usernameDisplay">User</span>
+        <i class="fas fa-caret-down"></i>
+        <span id="notification-badge" class="notification-badge"></span>
+      </button>
+      <div class="user-dropdown">
+        <a href="/userdashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="/messages.html"><i class="fas fa-envelope"></i> Messages <span id="messageNotifications"></span></a>
+        <a href="/friends.html"><i class="fas fa-users"></i> Friends <span id="friendRequests"></span></a>
+        <a href="/settings.html"><i class="fas fa-cog"></i> Settings</a>
+        <a href="#" id="logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+  </header>
+  
+  <nav>
+    <a href="/userdashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="/find-penpals.html"><i class="fas fa-search"></i> Find Pen Pals</a>
+    <a href="/messages.html" class="active"><i class="fas fa-envelope"></i> Messages</a>
+    <a href="/news-updates.html"><i class="fas fa-newspaper"></i> News</a>
+    <a href="/friends.html"><i class="fas fa-users"></i> Friends</a>
+  </nav>
+  
+  <main>
+    <div class="container">
+      <div class="grid grid-cols-4">
+        <!-- Conversation List -->
+        <div class="card" style="grid-column: span 1;">
+          <div class="conversation-header">
+            <h2>Conversations</h2>
+            <button id="newMessageBtn" class="button button-small">
+              <i class="fas fa-plus"></i> New
+            </button>
+          </div>
+          <div id="conversationList" class="conversation-list">
+            <!-- Conversations will be loaded here -->
+          </div>
+        </div>
+        
+        <!-- Message Area -->
+        <div class="card" style="grid-column: span 3;">
+          <div id="messageHeader" class="message-header">
+            <h2>Select a conversation</h2>
+          </div>
+          <div id="messageArea" class="message-area">
+            <div class="empty-state">
+              <i class="fas fa-comments fa-3x"></i>
+              <p>Select a conversation to start messaging</p>
+            </div>
+          </div>
+          <div id="messageComposer" class="message-composer" style="display: none;">
+            <textarea id="messageInput" placeholder="Type your message here..."></textarea>
+            <div class="composer-actions">
+              <button id="sendMessageBtn" class="button button-primary">
+                <i class="fas fa-paper-plane"></i> Send
+              </button>
+              <button id="attachFileBtn" class="button button-small">
+                <i class="fas fa-paperclip"></i>
+              </button>
+              <button id="recordVoiceBtn" class="button button-small">
+                <i class="fas fa-microphone"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- New Message Modal -->
+    <div id="newMessageModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>New Message</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="recipientSearch">Search Users:</label>
+            <input type="text" id="recipientSearch" placeholder="Start typing a name...">
+          </div>
+          <div id="recipientResults" class="search-results">
+            <!-- Search results will appear here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="social-links">
+      <a href="#"><i class="fab fa-facebook"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-youtube"></i></a>
+    </div>
+    <p>Contact: <a href="mailto:info@penpalmega.com">info@penpalmega.com</a></p>
+    <p>&copy; 2023 PenPalmega. All rights reserved.</p>
+  </footer>
+  
+  <script src="/js/script.js"></script>
+  <script>
+    let currentConversation = null;
+    let messages = [];
+    let conversations = [];
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load user data
+      const user = await fetchUserData();
+      if (!user) return;
+      
+      document.getElementById('usernameDisplay').textContent = user.name;
+      
+      // Load conversations
+      await loadConversations();
+      
+      // Set up event listeners
+      document.getElementById('newMessageBtn').addEventListener('click', showNewMessageModal);
+      document.querySelector('.modal-close').addEventListener('click', hideNewMessageModal);
+      document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
+      document.getElementById('messageInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+      
+      // Set up logout
+      document.getElementById('logout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await fetch('/logout', { method: 'GET' });
+        window.location.href = '/login.html';
+      });
+      
+      // Set up recipient search
+      document.getElementById('recipientSearch').addEventListener('input', searchRecipients);
+      
+      // Poll for new messages every 10 seconds
+      setInterval(loadConversations, 10000);
+    });
+    
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/user');
+        if (!response.ok) {
+          window.location.href = '/login.html';
+          return null;
+        }
+        return await response.json();
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        window.location.href = '/login.html';
+        return null;
+      }
+    }
+    
+    async function loadConversations() {
+      try {
+        const response = await fetch('/api/messages/conversations');
+        conversations = await response.json();
+        displayConversations();
+      } catch (err) {
+        console.error('Error loading conversations:', err);
+      }
+    }
+    
+    function displayConversations() {
+      const conversationList = document.getElementById('conversationList');
+      
+      if (conversations.length === 0) {
+        conversationList.innerHTML = '<p>No conversations yet</p>';
+        return;
+      }
+      
+      const html = conversations.map(conv => {
+        const otherUser = conv.participants.find(p => p._id !== user._id);
+        const lastMessage = conv.lastMessage;
+        const unreadCount = conv.unreadCount;
+        
+        return `
+          <div class="conversation-item ${currentConversation?._id === conv._id ? 'active' : ''}" 
+               data-conversation="${conv._id}" data-user="${otherUser._id}">
+            <img src="${otherUser.profilePicture || '/images/default-avatar.png'}" class="conversation-avatar">
+            <div class="conversation-info">
+              <strong>${otherUser.name}</strong>
+              <p>${lastMessage?.content.substring(0, 30) || ''}${lastMessage?.content.length > 30 ? '...' : ''}</p>
+            </div>
+            <div class="conversation-meta">
+              <small>${lastMessage ? formatTime(lastMessage.createdAt) : ''}</small>
+              ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      conversationList.innerHTML = html;
+      
+      // Add click handlers
+      document.querySelectorAll('.conversation-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const conversationId = item.dataset.conversation;
+          const userId = item.dataset.user;
+          openConversation(conversationId, userId);
+        });
+      });
+    }
+    
+    async function openConversation(conversationId, userId) {
+      currentConversation = conversationId;
+      
+      // Highlight active conversation
+      document.querySelectorAll('.conversation-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.conversation === conversationId) {
+          item.classList.add('active');
+        }
+      });
+      
+      // Load messages
+      const response = await fetch(`/api/messages?conversation=${conversationId}`);
+      messages = await response.json();
+      
+      // Display messages
+      displayMessages();
+      
+      // Show message composer
+      document.getElementById('messageComposer').style.display = 'block';
+      
+      // Update header with recipient info
+      const conversation = conversations.find(c => c._id === conversationId);
+      const otherUser = conversation.participants.find(p => p._id !== user._id);
+      
+      document.getElementById('messageHeader').innerHTML = `
+        <img src="${otherUser.profilePicture || '/images/default-avatar.png'}" class="message-header-avatar">
+        <div>
+          <h2>${otherUser.name}</h2>
+          <small>${otherUser.city ? otherUser.city + ', ' : ''}${otherUser.country || ''}</small>
+        </div>
+      `;
+      
+      // Mark messages as read
+      await fetch(`/api/messages/${conversationId}/read`, { method: 'POST' });
+      
+      // Update notifications
+      updateNotifications();
+    }
+    
+    function displayMessages() {
+      const messageArea = document.getElementById('messageArea');
+      
+      if (messages.length === 0) {
+        messageArea.innerHTML = '<div class="empty-state"><p>No messages yet</p></div>';
+        return;
+      }
+      
+      const html = messages.map(msg => {
+        const isMe = msg.from._id === user._id;
+        
+        return `
+          <div class="message ${isMe ? 'message-sent' : 'message-received'}">
+            ${!isMe ? `<img src="${msg.from.profilePicture || '/images/default-avatar.png'}" class="message-avatar">` : ''}
+            <div class="message-content">
+              <div class="message-text">${msg.content}</div>
+              <div class="message-time">${formatTime(msg.createdAt)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      messageArea.innerHTML = html;
+      messageArea.scrollTop = messageArea.scrollHeight;
+    }
+    
+    async function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const content = input.value.trim();
+      
+      if (!content || !currentConversation) return;
+      
+      try {
+        const response = await fetch('/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: currentConversation.otherUser,
+            content
+          })
+        });
+        
+        if (response.ok) {
+          input.value = '';
+          await loadConversations();
+          await openConversation(currentConversation);
+        }
+      } catch (err) {
+        console.error('Error sending message:', err);
+        alert('Error sending message');
+      }
+    }
+    
+    function showNewMessageModal() {
+      document.getElementById('newMessageModal').style.display = 'block';
+    }
+    
+    function hideNewMessageModal() {
+      document.getElementById('newMessageModal').style.display = 'none';
+    }
+    
+    async function searchRecipients() {
+      const query = document.getElementById('recipientSearch').value.trim();
+      
+      if (query.length < 2) {
+        document.getElementById('recipientResults').innerHTML = '';
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/search?query=${query}`);
+        const users = await response.json();
+        
+        const html = users.map(user => `
+          <div class="search-result" data-userid="${user._id}">
+            <img src="${user.profilePicture || '/images/default-avatar.png'}" class="result-avatar">
+            <div class="result-info">
+              <strong>${user.name}</strong>
+              <p>${user.city ? user.city + ', ' : ''}${user.country || ''}</p>
+            </div>
+            <button class="button button-small select-recipient">Select</button>
+          </div>
+        `).join('');
+        
+        document.getElementById('recipientResults').innerHTML = html;
+        
+        // Add click handlers
+        document.querySelectorAll('.select-recipient').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const userId = e.target.closest('.search-result').dataset.userid;
+            await startNewConversation(userId);
+            hideNewMessageModal();
+          });
+        });
+      } catch (err) {
+        console.error('Error searching users:', err);
+      }
+    }
+    
+    async function startNewConversation(userId) {
+      try {
+        const response = await fetch('/api/messages/conversations', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ participant: userId })
+        });
+        
+        if (response.ok) {
+        b   const conversation = await response.json();
+          await loadConversations();
+          openConversation(conversation._id, userId);
+        }
+      } catch (err) {
+        console.error('Error starting conversation:', err);
+        alert('Error starting conversation');
+      }
+    }
+    
+    function formatTime(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    function updateNotifications() {
+      // This would be handled by the Notifications class
+      // Included here for completeness
+    }
+  </script>
+</body>
+</html>

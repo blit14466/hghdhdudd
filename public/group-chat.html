@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Group Chat - PenPalmega</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">PenPalmega</a>
+    <div class="user-menu">
+      <button class="user-menu-btn">
+        <span id="usernameDisplay">User</span>
+        <i class="fas fa-caret-down"></i>
+        <span id="notification-badge" class="notification-badge"></span>
+      </button>
+      <div class="user-dropdown">
+        <a href="/userdashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="/messages.html"><i class="fas fa-envelope"></i> Messages <span id="messageNotifications"></span></a>
+        <a href="/friends.html"><i class="fas fa-users"></i> Friends <span id="friendRequests"></span></a>
+        <a href="/settings.html"><i class="fas fa-cog"></i> Settings</a>
+        <a href="#" id="logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+  </header>
+  
+  <nav>
+    <a href="/userdashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="/find-penpals.html"><i class="fas fa-search"></i> Find Pen Pals</a>
+    <a href="/messages.html"><i class="fas fa-envelope"></i> Messages</a>
+    <a href="/news-updates.html"><i class="fas fa-newspaper"></i> News</a>
+    <a href="/friends.html"><i class="fas fa-users"></i> Friends</a>
+  </nav>
+  
+  <main>
+    <div class="container">
+      <div class="grid grid-cols-4">
+        <!-- Group List -->
+        <div class="card" style="grid-column: span 1;">
+          <div class="group-header">
+            <h2>Group Chats</h2>
+            <button id="newGroupBtn" class="button button-small">
+              <i class="fas fa-plus"></i> New
+            </button>
+          </div>
+          <div id="groupList" class="group-list">
+            <!-- Groups will be loaded here -->
+          </div>
+        </div>
+        
+        <!-- Group Chat Area -->
+        <div class="card" style="grid-column: span 3;">
+          <div id="groupHeader" class="group-header">
+            <h2>Select a group</h2>
+          </div>
+          <div id="groupChatArea" class="group-chat-area">
+            <div class="empty-state">
+              <i class="fas fa-users fa-3x"></i>
+              <p>Select a group chat to start messaging</p>
+            </div>
+          </div>
+          <div id="groupComposer" class="group-composer" style="display: none;">
+            <textarea id="groupMessageInput" placeholder="Type your message here..."></textarea>
+            <div class="composer-actions">
+              <button id="sendGroupMessageBtn" class="button button-primary">
+                <i class="fas fa-paper-plane"></i> Send
+              </button>
+              <button id="attachGroupFileBtn" class="button button-small">
+                <i class="fas fa-paperclip"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- New Group Modal -->
+    <div id="newGroupModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Create New Group</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="groupName">Group Name:</label>
+            <input type="text" id="groupName" placeholder="Enter group name">
+          </div>
+          <div class="form-group">
+            <label for="groupTopic">Topic (optional):</label>
+            <input type="text" id="groupTopic" placeholder="e.g., Travel Enthusiasts">
+          </div>
+          <div class="form-group">
+            <label>Add Members:</label>
+            <input type="text" id="memberSearch" placeholder="Search friends...">
+            <div id="selectedMembers" class="selected-members"></div>
+            <div id="memberResults" class="search-results">
+              <!-- Search results will appear here -->
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button id="createGroupBtn" class="button">Create Group</button>
+            <button class="button button-secondary modal-close">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Group Info Modal -->
+    <div id="groupInfoModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="groupInfoTitle">Group Info</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="groupInfoContent">
+            <!-- Group info will be loaded here -->
+          </div>
+          <div class="modal-actions">
+            <button id="leaveGroupBtn" class="button button-secondary">Leave Group</button>
+            <button class="button modal-close">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="social-links">
+      <a href="#"><i class="fab fa-facebook"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-youtube"></i></a>
+    </div>
+    <p>Contact: <a href="mailto:info@penpalmega.com">info@penpalmega.com</a></p>
+    <p>&copy; 2023 PenPalmega. All rights reserved.</p>
+  </footer>
+  
+  <script src="/js/script.js"></script>
+  <script>
+    let currentGroup = null;
+    let groups = [];
+    let selectedMembers = [];
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load user data
+      const user = await fetchUserData();
+      if (!user) return;
+      
+      document.getElementById('usernameDisplay').textContent = user.name;
+      
+      // Load groups
+      await loadGroups();
+      
+      // Set up event listeners
+      document.getElementById('newGroupBtn').addEventListener('click', showNewGroupModal);
+      document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.addEventListener('click', hideModals);
+      });
+      document.getElementById('sendGroupMessageBtn').addEventListener('click', sendGroupMessage);
+      document.getElementById('groupMessageInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendGroupMessage();
+        }
+      });
+      document.getElementById('createGroupBtn').addEventListener('click', createGroup);
+      document.getElementById('memberSearch').addEventListener('input', searchMembers);
+      document.getElementById('leaveGroupBtn').addEventListener('click', leaveGroup);
+      
+      // Set up logout
+      document.getElementById('logout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await fetch('/logout', { method: 'GET' });
+        window.location.href = '/login.html';
+      });
+      
+      // Poll for new messages every 10 seconds
+      setInterval(() => {
+        if (currentGroup) {
+          loadGroupMessages(currentGroup._id);
+        }
+      }, 10000);
+    });
+    
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/user');
+        if (!response.ok) {
+          window.location.href = '/login.html';
+          return null;
+        }
+        return await response.json();
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        window.location.href = '/login.html';
+        return null;
+      }
+    }
+    
+    async function loadGroups() {
+      try {
+        const response = await fetch('/api/groups');
+        groups = await response.json();
+        displayGroups();
+      } catch (err) {
+        console.error('Error loading groups:', err);
+      }
+    }
+    
+    function displayGroups() {
+      const groupList = document.getElementById('groupList');
+      
+      if (groups.length === 0) {
+        groupList.innerHTML = '<p>No groups yet</p>';
+        return;
+      }
+      
+      const html = groups.map(group => {
+        const lastMessage = group.lastMessage;
+        const unreadCount = group.unreadCount;
+        
+        return `
+          <div class="group-item ${currentGroup?._id === group._id ? 'active' : ''}" 
+               data-group="${group._id}">
+            <div class="group-avatar">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="group-info">
+              <strong>${group.name}</strong>
+              <p>${lastMessage?.content.substring(0, 30) || ''}${lastMessage?.content.length > 30 ? '...' : ''}</p>
+            </div>
+            <div class="group-meta">
+              <small>${lastMessage ? formatTime(lastMessage.createdAt) : ''}</small>
+              ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      groupList.innerHTML = html;
+      
+      // Add click handlers
+      document.querySelectorAll('.group-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const groupId = item.dataset.group;
+          openGroup(groupId);
+        });
+      });
+    }
+    
+    async function openGroup(groupId) {
+      const group = groups.find(g => g._id === groupId);
+      if (!group) return;
+      
+      currentGroup = group;
+      
+      // Highlight active group
+      document.querySelectorAll('.group-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.group === groupId) {
+          item.classList.add('active');
+        }
+      });
+      
+      // Load messages
+      await loadGroupMessages(groupId);
+      
+      // Show message composer
+      document.getElementById('groupComposer').style.display = 'block';
+      
+      // Update header with group info
+      document.getElementById('groupHeader').innerHTML = `
+        <div class="group-title">
+          <h2>${group.name}</h2>
+          <small>${group.topic || ''}</small>
+        </div>
+        <button id="groupInfoBtn" class="button button-small">
+          <i class="fas fa-info-circle"></i> Info
+        </button>
+      `;
+      
+      // Add click handler for group info button
+      document.getElementById('groupInfoBtn').addEventListener('click', () => {
+        showGroupInfo(group);
+      });
+      
+      // Mark messages as read
+      await fetch(`/api/groups/${groupId}/read`, { method: 'POST' });
+      
+      // Update notifications
+      updateNotifications();
+    }
+    
+    async function loadGroupMessages(groupId) {
+      try {
+        const response = await fetch(`/api/groups/${groupId}/messages`);
+        const messages = await response.json();
+        displayGroupMessages(messages);
+      } catch (err) {
+        console.error('Error loading group messages:', err);
+      }
+    }
+    
+    function displayGroupMessages(messages) {
+      const messageArea = document.getElementById('groupChatArea');
+      
+      if (messages.length === 0) {
+        messageArea.innerHTML = '<div class="empty-state"><p>No messages yet</p></div>';
+        return;
+      }
+      
+      const html = messages.map(msg => {
+        const isMe = msg.from._id === user._id;
+        
+        return `
+          <div class="group-message ${isMe ? 'message-sent' : 'message-received'}">
+            ${!isMe ? `<img src="${msg.from.profilePicture || '/images/default-avatar.png'}" class="message-avatar">` : ''}
+            <div class="message-content">
+              ${!isMe ? `<div class="message-sender">${msg.from.name}</div>` : ''}
+              <div class="message-text">${msg.content}</div>
+              <div class="message-time">${formatTime(msg.createdAt)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      messageArea.innerHTML = html;
+      messageArea.scrollTop = messageArea.scrollHeight;
+    }
+    
+    async function sendGroupMessage() {
+      const input = document.getElementById('groupMessageInput');
+      const content = input.value.trim();
+      
+      if (!content || !currentGroup) return;
+      
+      try {
+        const response = await fetch(`/api/groups/${currentGroup._id}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content })
+        });
+        
+        if (response.ok) {
+          input.value = '';
+          await loadGroupMessages(currentGroup._id);
+          await loadGroups(); // Refresh group list to update last message
+        }
+      } catch (err) {
+        console.error('Error sending group message:', err);
+        alert('Error sending message');
+      }
+    }
+    
+    function showNewGroupModal() {
+      document.getElementById('newGroupModal').style.display = 'block';
+      selectedMembers = [];
+      updateSelectedMembers();
+    }
+    
+    function hideModals() {
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
+      });
+    }
+    
+    function showGroupInfo(group) {
+      document.getElementById('groupInfoTitle').textContent = group.name;
+      
+      const membersHtml = group.members.map(member => `
+        <div class="group-member">
+          <img src="${member.profilePicture || '/images/default-avatar.png'}" class="member-avatar">
+          <div class="member-info">
+            <strong>${member.name}</strong>
+            <small>${member.city ? member.city + ', ' : ''}${member.country || ''}</small>
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('groupInfoContent').innerHTML = `
+        <p><strong>Topic:</strong> ${group.topic || 'None'}</p>
+        <p><strong>Created:</strong> ${new Date(group.createdAt).toLocaleDateString()}</p>
+        <h4>Members (${group.members.length})</h4>
+        <div class="group-members">
+          ${membersHtml}
+        </div>
+      `;
+      
+      document.getElementById('groupInfoModal').style.display = 'block';
+    }
+    
+    async function createGroup() {
+      const name = document.getElementById('groupName').value.trim();
+      const topic = document.getElementById('groupTopic').value.trim();
+      
+      if (!name) {
+        alert('Please enter a group name');
+        return;
+      }
+      
+      if (selectedMembers.length === 0) {
+        alert('Please add at least one member');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/groups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            topic,
+            members: selectedMembers
+          })
+        });
+        
+        if (response.ok) {
+          const group = await response.json();
+          hideModals();
+          await loadGroups();
+          openGroup(group._id);
+        }
+      } catch (err) {
+        console.error('Error creating group:', err);
+        alert('Error creating group');
+      }
+    }
+    
+    async function searchMembers() {
+      const query = document.getElementById('memberSearch').value.trim();
+      
+      if (query.length < 2) {
+        document.getElementById('memberResults').innerHTML = '';
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/friends/search?query=${query}`);
+        const friends = await response.json();
+        
+        // Filter out already selected members
+        const availableFriends = friends.filter(friend => 
+          !selectedMembers.includes(friend._id)
+        );
+        
+        if (availableFriends.length === 0) {
+          document.getElementById('memberResults').innerHTML = '<p>No matching friends found</p>';
+          return;
+        }
+        
+        const html = availableFriends.map(friend => `
+          <div class="search-result" data-userid="${friend._id}">
+            <img src="${friend.profilePicture || '/images/default-avatar.png'}" class="result-avatar">
+            <div class="result-info">
+              <strong>${friend.name}</strong>
+              <p>${friend.city ? friend.city + ', ' : ''}${friend.country || ''}</p>
+            </div>
+            <button class="button button-small add-member">
+              <i class="fas fa-plus"></i> Add
+            </button>
+          </div>
+        `).join('');
+        
+        document.getElementById('memberResults').innerHTML = html;
+        
+        // Add click handlers for add buttons
+        document.querySelectorAll('.add-member').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const userId = e.target.closest('.search-result').dataset.userid;
+            if (!selectedMembers.includes(userId)) {
+              selectedMembers.push(userId);
+              updateSelectedMembers();
+            }
+          });
+        });
+      } catch (err) {
+        console.error('Error searching friends:', err);
+      }
+    }
+    
+    function updateSelectedMembers() {
+      const container = document.getElementById('selectedMembers');
+      
+      if (selectedMembers.length === 0) {
+        container.innerHTML = '<p>No members selected</p>';
+        return;
+      }
+      
+      // In a real app, you would fetch member details
+      container.innerHTML = `
+        <div class="selected-members-count">
+          ${selectedMembers.length} member${selectedMembers.length !== 1 ? 's' : ''} selected
+        </div>
+      `;
+      
+      // Clear search results
+      document.getElementById('memberResults').innerHTML = '';
+      document.getElementById('memberSearch').value = '';
+    }
+    
+    async function leaveGroup() {
+      if (!currentGroup) return;
+      
+      if (!confirm(`Are you sure you want to leave the group "${currentGroup.name}"?`)) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/groups/${currentGroup._id}/leave`, {
+          method: 'POST'
+        });
+        
+        if (response.ok) {
+          hideModals();
+          await loadGroups();
+          currentGroup = null;
+          document.getElementById('groupChatArea').innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-users fa-3x"></i>
+              <p>Select a group chat to start messaging</p>
+            </div>
+          `;
+          document.getElementById('groupComposer').style.display = 'none';
+          document.getElementById('groupHeader').innerHTML = '<h2>Select a group</h2>';
+        }
+      } catch (err) {
+        console.error('Error leaving group:', err);
+        alert('Error leaving group');
+      }
+    }
+    
+    function formatTime(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    function updateNotifications() {
+      // This would be handled by the Notifications class
+      // Included here for completeness
+    }
+  </script>
+</body>
+</html>

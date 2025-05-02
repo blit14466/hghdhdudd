@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report a Problem - PenPalmega</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">PenPalmega</a>
+    <div class="user-menu">
+      <button class="user-menu-btn">
+        <span id="usernameDisplay">User</span>
+        <i class="fas fa-caret-down"></i>
+        <span id="notification-badge" class="notification-badge"></span>
+      </button>
+      <div class="user-dropdown">
+        <a href="/userdashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="/messages.html"><i class="fas fa-envelope"></i> Messages <span id="messageNotifications"></span></a>
+        <a href="/friends.html"><i class="fas fa-users"></i> Friends <span id="friendRequests"></span></a>
+        <a href="/settings.html"><i class="fas fa-cog"></i> Settings</a>
+        <a href="#" id="logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+  </header>
+  
+  <nav>
+    <a href="/userdashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="/find-penpals.html"><i class="fas fa-search"></i> Find Pen Pals</a>
+    <a href="/messages.html"><i class="fas fa-envelope"></i> Messages</a>
+    <a href="/news-updates.html"><i class="fas fa-newspaper"></i> News</a>
+    <a href="/friends.html"><i class="fas fa-users"></i> Friends</a>
+  </nav>
+  
+  <main>
+    <div class="container">
+      <h1>Report a Problem</h1>
+      
+      <div class="grid grid-cols-2">
+        <!-- Report Form -->
+        <div class="card" style="grid-column: span 2;">
+          <div class="tabs">
+            <button class="tab-button active" data-tab="report-user">Report User</button>
+            <button class="tab-button" data-tab="report-bug">Report Bug</button>
+            <button class="tab-button" data-tab="report-content">Report Content</button>
+            <button class="tab-button" data-tab="general-help">General Help</button>
+          </div>
+          
+          <div id="report-user" class="tab-content active">
+            <form id="userReportForm">
+              <div class="form-group">
+                <label for="reportUsername">Username to Report</label>
+                <input type="text" id="reportUsername" name="username" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="userReportReason">Reason for Reporting</label>
+                <select id="userReportReason" name="reason" required>
+                  <option value="">Select a reason</option>
+                  <option value="harassment">Harassment or Bullying</option>
+                  <option value="spam">Spam or Scam</option>
+                  <option value="inappropriate">Inappropriate Content</option>
+                  <option value="fake">Fake Profile</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="userReportDetails">Details</label>
+                <textarea id="userReportDetails" name="details" rows="4" required
+                          placeholder="Please provide specific details about the issue..."></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label>Evidence (Screenshots, etc.)</label>
+                <input type="file" id="userReportEvidence" multiple accept="image/*,.pdf">
+                <small>You can upload up to 3 files (images or PDFs)</small>
+              </div>
+              
+              <button type="submit" class="button button-primary">
+                <i class="fas fa-flag"></i> Submit Report
+              </button>
+            </form>
+          </div>
+          
+          <div id="report-bug" class="tab-content">
+            <form id="bugReportForm">
+              <div class="form-group">
+                <label for="bugTitle">Brief Description</label>
+                <input type="text" id="bugTitle" name="title" required
+                       placeholder="E.g., 'Cannot send messages on mobile'">
+              </div>
+              
+              <div class="form-group">
+                <label for="bugDetails">Detailed Explanation</label>
+                <textarea id="bugDetails" name="details" rows="4" required
+                          placeholder="Describe what happened, what you expected to happen, and steps to reproduce..."></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label>Device Information</label>
+                <div class="grid grid-cols-3">
+                  <div class="form-group">
+                    <label for="bugDevice">Device Type</label>
+                    <select id="bugDevice" name="device">
+                      <option value="">Select device</option>
+                      <option value="desktop">Desktop</option>
+                      <option value="mobile">Mobile</option>
+                      <option value="tablet">Tablet</option>
+                    </select>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="bugOS">Operating System</label>
+                    <input type="text" id="bugOS" name="os" placeholder="E.g., Windows 10, iOS 15">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="bugBrowser">Browser</label>
+                    <input type="text" id="bugBrowser" name="browser" placeholder="E.g., Chrome 98, Safari">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>Screenshots (if applicable)</label>
+                <input type="file" id="bugScreenshots" multiple accept="image/*">
+              </div>
+              
+              <button type="submit" class="button button-primary">
+                <i class="fas fa-bug"></i> Report Bug
+              </button>
+            </form>
+          </div>
+          
+          <div id="report-content" class="tab-content">
+            <form id="contentReportForm">
+              <div class="form-group">
+                <label for="contentUrl">URL of Content (if applicable)</label>
+                <input type="url" id="contentUrl" name="url" placeholder="Paste link to the content">
+              </div>
+              
+              <div class="form-group">
+                <label for="contentReason">Reason for Reporting</label>
+                <select id="contentReason" name="reason" required>
+                  <option value="">Select a reason</option>
+                  <option value="offensive">Offensive Content</option>
+                  <option value="copyright">Copyright Violation</option>
+                  <option value="privacy">Privacy Violation</option>
+                  <option value="illegal">Illegal Content</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="contentDetails">Additional Information</label>
+                <textarea id="contentDetails" name="details" rows="4" required
+                          placeholder="Please explain why you're reporting this content..."></textarea>
+              </div>
+              
+              <button type="submit" class="button button-primary">
+                <i class="fas fa-exclamation-triangle"></i> Report Content
+              </button>
+            </form>
+          </div>
+          
+          <div id="general-help" class="tab-content">
+            <form id="helpRequestForm">
+              <div class="form-group">
+                <label for="helpSubject">Subject</label>
+                <input type="text" id="helpSubject" name="subject" required
+                       placeholder="Briefly describe your issue">
+              </div>
+              
+              <div class="form-group">
+                <label for="helpDetails">Detailed Description</label>
+                <textarea id="helpDetails" name="details" rows="6" required
+                          placeholder="Please describe your issue in detail..."></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label>Contact Information</label>
+                <div class="grid grid-cols-2">
+                  <div class="form-group">
+                    <label for="helpEmail">Email</label>
+                    <input type="email" id="helpEmail" name="email" required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="helpPriority">Priority</label>
+                    <select id="helpPriority" name="priority">
+                      <option value="low">Low</option>
+                      <option value="medium" selected>Medium</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <button type="submit" class="button button-primary">
+                <i class="fas fa-question-circle"></i> Request Help
+              </button>
+            </form>
+            
+            <div class="help-resources">
+              <h3>Quick Help Resources</h3>
+              <ul>
+                <li>
+                  <a href="/help.html#faq"><i class="fas fa-question"></i> Frequently Asked Questions</a>
+                </li>
+                <li>
+                  <a href="/help.html#safety"><i class="fas fa-shield-alt"></i> Safety Guidelines</a>
+                </li>
+                <li>
+                  <a href="/help.html#contact"><i class="fas fa-headset"></i> Contact Support</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Report Confirmation Modal -->
+    <div id="reportConfirmationModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="confirmationTitle">Report Submitted</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="confirmationMessage">
+            <p>Thank you for your report. Our team will review it shortly.</p>
+            <p>Reference ID: <strong id="reportId"></strong></p>
+          </div>
+          <div class="modal-actions">
+            <button class="button modal-close">Close</button>
+            <a href="/userdashboard.html" class="button button-secondary">
+              Return to Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="social-links">
+      <a href="#"><i class="fab fa-facebook"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-youtube"></i></a>
+    </div>
+    <p>Contact: <a href="mailto:info@penpalmega.com">info@penpalmega.com</a></p>
+    <p>&copy; 2023 PenPalmega. All rights reserved.</p>
+  </footer>
+  
+  <script src="/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load user data
+      const user = await fetchUserData();
+      if (!user) return;
+      
+      document.getElementById('usernameDisplay').textContent = user.name;
+      
+      // Set up tab switching
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+          const tabId = button.dataset.tab;
+          
+          // Update active tab button
+          document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active');
+          });
+          button.classList.add('active');
+          
+          // Update active tab content
+          document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+          });
+          document.getElementById(tabId).classList.add('active');
+        });
+      });
+      
+      // Set up form submissions
+      document.getElementById('userReportForm').addEventListener('submit', submitUserReport);
+      document.getElementById('bugReportForm').addEventListener('submit', submitBugReport);
+      document.getElementById('contentReportForm').addEventListener('submit', submitContentReport);
+      document.getElementById('helpRequestForm').addEventListener('submit', submitHelpRequest);
+      
+      // Set up modal close
+      document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('reportConfirmationModal').style.display = 'none';
+        });
+      });
+      
+      // Set up logout
+      document.getElementById('logout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await fetch('/logout', { method: 'GET' });
+        window.location.href = '/login.html';
+      });
+    });
+    
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/user');
+        if (!response.ok) {
+          window.location.href = '/login.html';
+          return null;
+        }
+        return await response.json();
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        window.location.href = '/login.html';
+        return null;
+      }
+    }
+    
+    async function submitUserReport(e) {
+      e.preventDefault();
+      
+      const formData = new FormData();
+      formData.append('username', document.getElementById('reportUsername').value);
+      formData.append('reason', document.getElementById('userReportReason').value);
+      formData.append('details', document.getElementById('userReportDetails').value);
+      
+      const files = document.getElementById('userReportEvidence').files;
+      for (let i = 0; i < files.length; i++) {
+        formData.append('evidence', files[i]);
+      }
+      
+      await submitReport('/api/reports/user', formData, 'User Report Submitted');
+    }
+    
+    async function submitBugReport(e) {
+      e.preventDefault();
+      
+      const formData = new FormData();
+      formData.append('title', document.getElementById('bugTitle').value);
+      formData.append('details', document.getElementById('bugDetails').value);
+      formData.append('device', document.getElementById('bugDevice').value);
+      formData.append('os', document.getElementById('bugOS').value);
+      formData.append('browser', document.getElementById('bugBrowser').value);
+      
+      const files = document.getElementById('bugScreenshots').files;
+      for (let i = 0; i < files.length; i++) {
+        formData.append('screenshots', files[i]);
+      }
+      
+      await submitReport('/api/reports/bug', formData, 'Bug Report Submitted');
+    }
+    
+    async function submitContentReport(e) {
+      e.preventDefault();
+      
+      const formData = new FormData();
+      formData.append('url', document.getElementById('contentUrl').value);
+      formData.append('reason', document.getElementById('contentReason').value);
+      formData.append('details', document.getElementById('contentDetails').value);
+      
+      await submitReport('/api/reports/content', formData, 'Content Report Submitted');
+    }
+    
+    async function submitHelpRequest(e) {
+      e.preventDefault();
+      
+      const formData = new FormData();
+      formData.append('subject', document.getElementById('helpSubject').value);
+      formData.append('details', document.getElementById('helpDetails').value);
+      formData.append('email', document.getElementById('helpEmail').value);
+      formData.append('priority', document.getElementById('helpPriority').value);
+      
+      await submitReport('/api/reports/help', formData, 'Help Request Submitted');
+    }
+    
+    async function submitReport(endpoint, formData, title) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          showConfirmation(title, result.reportId);
+          // Reset forms
+          document.querySelectorAll('form').forEach(form => form.reset());
+        } else {
+          throw new Error('Failed to submit report');
+        }
+      } catch (err) {
+        console.error('Error submitting report:', err);
+        alert('Error submitting report. Please try again.');
+      }
+    }
+    
+    function showConfirmation(title, reportId) {
+      document.getElementById('confirmationTitle').textContent = title;
+      document.getElementById('reportId').textContent = reportId || 'N/A';
+      document.getElementById('reportConfirmationModal').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
