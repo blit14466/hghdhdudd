@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>News & Updates - PenPalmega</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">PenPalmega</a>
+    <div class="user-menu">
+      <button class="user-menu-btn">
+        <span id="usernameDisplay">User</span>
+        <i class="fas fa-caret-down"></i>
+        <span id="notification-badge" class="notification-badge"></span>
+      </button>
+      <div class="user-dropdown">
+        <a href="/userdashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="/messages.html"><i class="fas fa-envelope"></i> Messages <span id="messageNotifications"></span></a>
+        <a href="/friends.html"><i class="fas fa-users"></i> Friends <span id="friendRequests"></span></a>
+        <a href="/settings.html"><i class="fas fa-cog"></i> Settings</a>
+        <a href="#" id="logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+  </header>
+  
+  <nav>
+    <a href="/userdashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="/find-penpals.html"><i class="fas fa-search"></i> Find Pen Pals</a>
+    <a href="/messages.html"><i class="fas fa-envelope"></i> Messages</a>
+    <a href="/news-updates.html" class="active"><i class="fas fa-newspaper"></i> News</a>
+    <a href="/friends.html"><i class="fas fa-users"></i> Friends</a>
+  </nav>
+  
+  <main>
+    <div class="container">
+      <div class="news-header">
+        <h1>News & Updates</h1>
+        <p>Stay informed about the latest features and community news</p>
+      </div>
+      
+      <div class="grid grid-cols-2">
+        <!-- Main News Feed -->
+        <div class="card" style="grid-column: span 2;">
+          <div id="newsFeed">
+            <!-- News items will be loaded here -->
+            <div class="loading-spinner">
+              <i class="fas fa-spinner fa-spin"></i>
+              <p>Loading news...</p>
+            </div>
+          </div>
+          
+          <div class="pagination">
+            <button id="prevPageBtn" class="button button-small" disabled>
+              <i class="fas fa-chevron-left"></i> Previous
+            </button>
+            <span id="pageInfo">Page 1</span>
+            <button id="nextPageBtn" class="button button-small">
+              Next <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="social-links">
+      <a href="#"><i class="fab fa-facebook"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-youtube"></i></a>
+    </div>
+    <p>Contact: <a href="mailto:info@penpalmega.com">info@penpalmega.com</a></p>
+    <p>&copy; 2023 PenPalmega. All rights reserved.</p>
+  </footer>
+  
+  <script src="/js/script.js"></script>
+  <script>
+    let currentPage = 1;
+    const itemsPerPage = 5;
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load user data
+      const user = await fetchUserData();
+      if (!user) return;
+      
+      document.getElementById('usernameDisplay').textContent = user.name;
+      
+      // Load news
+      await loadNews();
+      
+      // Set up pagination
+      document.getElementById('prevPageBtn').addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          loadNews();
+        }
+      });
+      
+      document.getElementById('nextPageBtn').addEventListener('click', () => {
+        currentPage++;
+        loadNews();
+      });
+      
+      // Set up logout
+      document.getElementById('logout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await fetch('/logout', { method: 'GET' });
+        window.location.href = '/login.html';
+      });
+    });
+    
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/user');
+        if (!response.ok) {
+          window.location.href = '/login.html';
+          return null;
+        }
+        return await response.json();
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        window.location.href = '/login.html';
+        return null;
+      }
+    }
+    
+    async function loadNews() {
+      try {
+        document.getElementById('newsFeed').innerHTML = `
+          <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading news...</p>
+          </div>
+        `;
+        
+        const response = await fetch(`/api/news?page=${currentPage}&limit=${itemsPerPage}`);
+        const { news, totalItems } = await response.json();
+        
+        if (news.length === 0) {
+          document.getElementById('newsFeed').innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-newspaper fa-3x"></i>
+              <p>No news items found</p>
+            </div>
+          `;
+          return;
+        }
+        
+        const newsHtml = news.map(item => `
+          <div class="news-item">
+            <div class="news-header">
+              <h3>${item.title}</h3>
+              <small class="news-date">
+                <i class="far fa-calendar-alt"></i> ${new Date(item.date).toLocaleDateString()}
+                ${item.isNew ? '<span class="new-badge">NEW</span>' : ''}
+              </small>
+            </div>
+            <div class="news-content">
+              ${item.content}
+              ${item.image ? `<img src="${item.image}" class="news-image">` : ''}
+            </div>
+            ${item.link ? `
+              <a href="${item.link}" class="news-link" target="_blank">
+                Read more <i class="fas fa-external-link-alt"></i>
+              </a>
+            ` : ''}
+          </div>
+        `).join('');
+        
+        document.getElementById('newsFeed').innerHTML = newsHtml;
+        updatePagination(totalItems);
+      } catch (err) {
+        console.error('Error loading news:', err);
+        document.getElementById('newsFeed').innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-exclamation-triangle fa-3x"></i>
+            <p>Error loading news feed</p>
+            <button class="button button-small" onclick="loadNews()">
+              <i class="fas fa-sync-alt"></i> Try Again
+            </button>
+          </div>
+        `;
+      }
+    }
+    
+    function updatePagination(totalItems) {
+      document.getElementById('pageInfo').textContent = `Page ${currentPage}`;
+      
+      const prevBtn = document.getElementById('prevPageBtn');
+      const nextBtn = document.getElementById('nextPageBtn');
+      
+      prevBtn.disabled = currentPage <= 1;
+      nextBtn.disabled = currentPage * itemsPerPage >= totalItems;
+    }
+  </script>
+</body>
+</html>

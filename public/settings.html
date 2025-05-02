@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - PenPalmega</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">PenPalmega</a>
+    <div class="user-menu">
+      <button class="user-menu-btn">
+        <span id="usernameDisplay">User</span>
+        <i class="fas fa-caret-down"></i>
+        <span id="notification-badge" class="notification-badge"></span>
+      </button>
+      <div class="user-dropdown">
+        <a href="/userdashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="/messages.html"><i class="fas fa-envelope"></i> Messages <span id="messageNotifications"></span></a>
+        <a href="/friends.html"><i class="fas fa-users"></i> Friends <span id="friendRequests"></span></a>
+        <a href="/settings.html"><i class="fas fa-cog"></i> Settings</a>
+        <a href="#" id="logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+  </header>
+  
+  <nav>
+    <a href="/userdashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="/find-penpals.html"><i class="fas fa-search"></i> Find Pen Pals</a>
+    <a href="/messages.html"><i class="fas fa-envelope"></i> Messages</a>
+    <a href="/news-updates.html"><i class="fas fa-newspaper"></i> News</a>
+    <a href="/friends.html"><i class="fas fa-users"></i> Friends</a>
+  </nav>
+  
+  <main>
+    <div class="container">
+      <h1>Settings</h1>
+      
+      <div class="grid grid-cols-2">
+        <div class="card">
+          <h2><i class="fas fa-user-shield"></i> Privacy Settings</h2>
+          <form id="privacyForm">
+            <div class="form-group">
+              <label for="whoCanMessage">Who can message me:</label>
+              <select id="whoCanMessage" name="whoCanMessage">
+                <option value="Everyone">Everyone</option>
+                <option value="Friends">Friends Only</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="whoCanSeeFriendList">Who can see my friend list:</label>
+              <select id="whoCanSeeFriendList" name="whoCanSeeFriendList">
+                <option value="Everyone">Everyone</option>
+                <option value="Friends">Friends Only</option>
+                <option value="OnlyMe">Only Me</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="whoCanSeeEmail">Who can see my email:</label>
+              <select id="whoCanSeeEmail" name="whoCanSeeEmail">
+                <option value="Everyone">Everyone</option>
+                <option value="Friends">Friends Only</option>
+                <option value="OnlyMe">Only Me</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="whoCanSeeOnlineStatus">Who can see when I'm online:</label>
+              <select id="whoCanSeeOnlineStatus" name="whoCanSeeOnlineStatus">
+                <option value="Everyone">Everyone</option>
+                <option value="Friends">Friends Only</option>
+                <option value="OnlyMe">Only Me</option>
+              </select>
+            </div>
+            
+            <button type="submit" class="button">Save Privacy Settings</button>
+          </form>
+        </div>
+        
+        <div class="card">
+          <h2><i class="fas fa-palette"></i> Appearance</h2>
+          <form id="themeForm">
+            <div class="form-group">
+              <label>Theme:</label>
+              <div class="theme-options">
+                <label>
+                  <input type="radio" name="theme" value="light" checked>
+                  <div class="theme-preview light-theme">
+                    <span>Light Mode</span>
+                  </div>
+                </label>
+                <label>
+                  <input type="radio" name="theme" value="dark">
+                  <div class="theme-preview dark-theme">
+                    <span>Dark Mode</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+            <button type="submit" class="button">Save Theme</button>
+          </form>
+        </div>
+      </div>
+      
+      <div class="card" style="margin-top: 2rem;">
+        <h2><i class="fas fa-language"></i> Language</h2>
+        <form id="languageForm">
+          <div class="form-group">
+            <label for="language">Select Language:</label>
+            <select id="language" name="language">
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+              <option value="it">Italiano</option>
+              <option value="pt">Português</option>
+            </select>
+          </div>
+          <button type="submit" class="button">Save Language</button>
+        </form>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="social-links">
+      <a href="#"><i class="fab fa-facebook"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-youtube"></i></a>
+    </div>
+    <p>Contact: <a href="mailto:info@penpalmega.com">info@penpalmega.com</a></p>
+    <p>&copy; 2023 PenPalmega. All rights reserved.</p>
+  </footer>
+  
+  <script src="/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load user data
+      const user = await fetchUserData();
+      if (!user) return;
+      
+      document.getElementById('usernameDisplay').textContent = user.name;
+      
+      // Load current privacy settings
+      if (user.privacySettings) {
+        document.getElementById('whoCanMessage').value = user.privacySettings.whoCanMessage;
+        document.getElementById('whoCanSeeFriendList').value = user.privacySettings.whoCanSeeFriendList;
+        document.getElementById('whoCanSeeEmail').value = user.privacySettings.whoCanSeeEmail;
+        document.getElementById('whoCanSeeOnlineStatus').value = user.privacySettings.whoCanSeeOnlineStatus;
+      }
+      
+      // Load current theme
+      document.querySelector(`input[name="theme"][value="${user.theme || 'light'}"]`).checked = true;
+      
+      // Set up form submissions
+      document.getElementById('privacyForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await updatePrivacySettings();
+      });
+      
+      document.getElementById('themeForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await updateTheme();
+      });
+      
+      document.getElementById('languageForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await updateLanguage();
+      });
+      
+      // Set up logout
+      document.getElementById('logout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await fetch('/logout', { method: 'GET' });
+        window.location.href = '/login.html';
+      });
+    });
+    
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/user');
+        if (!response.ok) {
+          window.location.href = '/login.html';
+          return null;
+        }
+        return await response.json();
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        window.location.href = '/login.html';
+        return null;
+      }
+    }
+    
+    async function updatePrivacySettings() {
+      try {
+        const formData = {
+          whoCanMessage: document.getElementById('whoCanMessage').value,
+          whoCanSeeFriendList: document.getElementById('whoCanSeeFriendList').value,
+          whoCanSeeEmail: document.getElementById('whoCanSeeEmail').value,
+          whoCanSeeOnlineStatus: document.getElementById('whoCanSeeOnlineStatus').value
+        };
+        
+        const response = await fetch('/api/user/privacy', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+          alert('Privacy settings updated successfully!');
+        } else {
+          throw new Error('Failed to update privacy settings');
+        }
+      } catch (err) {
+        console.error('Error updating privacy settings:', err);
+        alert('Error updating privacy settings');
+      }
+    }
+    
+    async function updateTheme() {
+      try {
+        const theme = document.querySelector('input[name="theme"]:checked').value;
+        
+        const response = await fetch('/api/user/theme', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ theme })
+        });
+        
+        if (response.ok) {
+          alert('Theme updated successfully!');
+          // Apply theme immediately
+          document.body.className = theme === 'dark' ? 'dark-theme' : '';
+        } else {
+          throw new Error('Failed to update theme');
+        }
+      } catch (err) {
+        console.error('Error updating theme:', err);
+        alert('Error updating theme');
+      }
+    }
+    
+    async function updateLanguage() {
+      try {
+        const language = document.getElementById('language').value;
+        alert(`Language preference set to ${language}. This feature will be fully implemented soon!`);
+        // In a real app, you would save this to the user's profile
+      } catch (err) {
+        console.error('Error updating language:', err);
+        alert('Error updating language');
+      }
+    }
+  </script>
+</body>
+</html>

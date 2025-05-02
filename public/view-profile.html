@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Profile - PenPalmega</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">PenPalmega</a>
+    <div class="user-menu">
+      <button class="user-menu-btn">
+        <span id="usernameDisplay">User</span>
+        <i class="fas fa-caret-down"></i>
+        <span id="notification-badge" class="notification-badge"></span>
+      </button>
+      <div class="user-dropdown">
+        <a href="/userdashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="/messages.html"><i class="fas fa-envelope"></i> Messages <span id="messageNotifications"></span></a>
+        <a href="/friends.html"><i class="fas fa-users"></i> Friends <span id="friendRequests"></span></a>
+        <a href="/settings.html"><i class="fas fa-cog"></i> Settings</a>
+        <a href="#" id="logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+  </header>
+  
+  <nav>
+    <a href="/userdashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="/find-penpals.html"><i class="fas fa-search"></i> Find Pen Pals</a>
+    <a href="/messages.html"><i class="fas fa-envelope"></i> Messages</a>
+    <a href="/news-updates.html"><i class="fas fa-newspaper"></i> News</a>
+    <a href="/friends.html"><i class="fas fa-users"></i> Friends</a>
+  </nav>
+  
+  <main>
+    <div class="container">
+      <div id="profileContainer">
+        <div class="card">
+          <div class="profile-header">
+            <img id="profileAvatar" src="/images/default-avatar.png" class="profile-avatar">
+            <div class="profile-info">
+              <h1 id="profileName">Loading profile...</h1>
+              <div id="profileLocation"></div>
+              <div id="profileStatus"></div>
+            </div>
+            <div class="profile-actions">
+              <button id="addFriendBtn" class="button">
+                <i class="fas fa-user-plus"></i> Add Friend
+              </button>
+              <a id="sendMessageBtn" href="#" class="button button-secondary">
+                <i class="fas fa-envelope"></i> Send Message
+              </a>
+              <div class="dropdown">
+                <button class="button button-small dropdown-toggle">
+                  <i class="fas fa-ellipsis-h"></i>
+                </button>
+                <div class="dropdown-menu">
+                  <a href="#" id="blockUserBtn"><i class="fas fa-ban"></i> Block User</a>
+                  <a href="#" id="reportUserBtn"><i class="fas fa-flag"></i> Report User</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="profile-content grid grid-cols-3">
+            <div class="profile-section" style="grid-column: span 2;">
+              <h2>About</h2>
+              <div id="profileAbout"></div>
+              
+              <h2>Interests</h2>
+              <div id="profileInterests" class="interests-list"></div>
+              
+              <h2>Languages</h2>
+              <div id="profileLanguages" class="languages-list"></div>
+            </div>
+            
+            <div class="profile-section">
+              <h2>Details</h2>
+              <div class="profile-details">
+                <div class="detail-item">
+                  <strong>Age:</strong>
+                  <span id="profileAge"></span>
+                </div>
+                <div class="detail-item">
+                  <strong>Gender:</strong>
+                  <span id="profileGender"></span>
+                </div>
+                <div class="detail-item">
+                  <strong>Joined:</strong>
+                  <span id="profileJoined"></span>
+                </div>
+                <div class="detail-item">
+                  <strong>Last Active:</strong>
+                  <span id="profileLastActive"></span>
+                </div>
+              </div>
+              
+              <h2>Friends</h2>
+              <div id="profileFriends" class="friends-preview"></div>
+              <a id="viewAllFriends" href="#" class="button button-small" style="margin-top: 0.5rem;">
+                View All Friends
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Comments Section -->
+        <div class="card" style="margin-top: 2rem;">
+          <h2>Comments</h2>
+          <div id="commentsSection">
+            <div class="comment-form">
+              <textarea id="commentInput" placeholder="Write a comment..."></textarea>
+              <button id="postCommentBtn" class="button button-small">Post Comment</button>
+            </div>
+            <div id="commentsList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Block User Modal -->
+    <div id="blockModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Block User</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to block this user? You won't be able to see each other's profiles or send messages.</p>
+          <div class="modal-actions">
+            <button id="confirmBlockBtn" class="button button-secondary">Block User</button>
+            <button class="button modal-close">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Report User Modal -->
+    <div id="reportModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Report User</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Reason for reporting:</label>
+            <select id="reportReason">
+              <option value="spam">Spam or misleading content</option>
+              <option value="harassment">Harassment or bullying</option>
+              <option value="inappropriate">Inappropriate content</option>
+              <option value="fake">Fake profile</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="reportDetails">Additional details:</label>
+            <textarea id="reportDetails" placeholder="Please provide more details..."></textarea>
+          </div>
+          <div class="modal-actions">
+            <button id="confirmReportBtn" class="button button-secondary">Submit Report</button>
+            <button class="button modal-close">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="social-links">
+      <a href="#"><i class="fab fa-facebook"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-youtube"></i></a>
+    </div>
+    <p>Contact: <a href="mailto:info@penpalmega.com">info@penpalmega.com</a></p>
+    <p>&copy; 2023 PenPalmega. All rights reserved.</p>
+  </footer>
+  
+  <script src="/js/script.js"></script>
+  <script>
+    let profileUser = null;
+    let isFriend = false;
+    let friendRequestSent = false;
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load user data
+      const user = await fetchUserData();
+      if (!user) return;
+      
+      document.getElementById('usernameDisplay').textContent = user.name;
+      
+      // Get profile ID from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const profileId = urlParams.get('id');
+      
+      if (!profileId) {
+        window.location.href = '/find-penpals.html';
+        return;
+      }
+      
+      // Load profile data
+      await loadProfile(profileId);
+      
+      // Set up action buttons
+      document.getElementById('addFriendBtn').addEventListener('click', handleFriendAction);
+      document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
+      document.getElementById('blockUserBtn').addEventListener('click', () => {
+        document.getElementById('blockModal').style.display = 'block';
+      });
+      document.getElementById('reportUserBtn').addEventListener('click', () => {
+        document.getElementById('reportModal').style.display = 'block';
+      });
+      document.getElementById('confirmBlockBtn').addEventListener('click', blockUser);
+      document.getElementById('confirmReportBtn').addEventListener('click', reportUser);
+      document.getElementById('postCommentBtn').addEventListener('click', postComment);
+      
+      // Set up modal close buttons
+      document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.modal').forEach(modal => {
+            modal.style.display = 'none';
+          });
+        });
+      });
+      
+      // Set up logout
+      document.getElementById('logout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await fetch('/logout', { method: 'GET' });
+        window.location.href = '/login.html';
+      });
+    });
+    
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/user');
+        if (!response.ok) {
+          window.location.href = '/login.html';
+          return null;
+        }
+        return await response.json();
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        window.location.href = '/login.html';
+        return null;
+      }
+    }
+    
+    async function loadProfile(userId) {
+      try {
+        const response = await fetch(`/api/user/${userId}`);
+        if (!response.ok) {
+          throw new Error('Profile not found');
+        }
+        
+        profileUser = await response.json();
+        renderProfile();
+        
+        // Check friendship status
+        await checkFriendshipStatus();
+      } catch (err) {
+        console.error('Error loading profile:', err);
+        document.getElementById('profileContainer').innerHTML = `
+          <div class="card">
+            <h2>Profile Not Found</h2>
+            <p>The requested profile could not be found or you don't have permission to view it.</p>
+            <a href="/find-penpals.html" class="button">Find Pen Pals</a>
+          </div>
+        `;
+      }
+    }
+    
+    function renderProfile() {
+      document.getElementById('profileName').textContent = profileUser.name;
+      
+      if (profileUser.profilePicture) {
+        document.getElementById('profileAvatar').src = profileUser.profilePicture;
+      }
+      
+      if (profileUser.city || profileUser.country) {
+        document.getElementById('profileLocation').textContent = 
+          `${profileUser.city ? profileUser.city + ', ' : ''}${profileUser.country || ''}`;
+      }
+      
+      if (profileUser.description) {
+        document.getElementById('profileAbout').textContent = profileUser.description;
+      } else {
+        document.getElementById('profileAbout').innerHTML = '<p>No description provided</p>';
+      }
+      
+      if (profileUser.age) {
+        document.getElementById('profileAge').textContent = profileUser.age;
+      } else {
+        document.getElementById('profileAge').textContent = 'Not specified';
+      }
+      
+      if (profileUser.gender) {
+        document.getElementById('profileGender').textContent = profileUser.gender;
+      } else {
+        document.getElementById('profileGender').textContent = 'Not specified';
+      }
+      
+      if (profileUser.createdAt) {
+        document.getElementById('profileJoined').textContent = 
+          new Date(profileUser.createdAt).toLocaleDateString();
+      }
+      
+      if (profileUser.lastSeen) {
+        document.getElementById('profileLastActive').textContent = 
+          `${new Date(profileUser.lastSeen).toLocaleDateString()} (${timeSince(profileUser.lastSeen)})`;
+      } else {
+        document.getElementById('profileLastActive').textContent = 'Unknown';
+      }
+      
+      // Render interests
+      if (profileUser.hobbies && profileUser.hobbies.length > 0) {
+        document.getElementById('profileInterests').innerHTML = 
+          profileUser.hobbies.map(hobby => `<span class="interest-tag">${hobby}</span>`).join('');
+      } else {
+        document.getElementById('profileInterests').innerHTML = '<p>No interests specified</p>';
+      }
+      
+      // Render languages
+      if (profileUser.languages && profileUser.languages.length > 0) {
+        document.getElementById('profileLanguages').innerHTML = 
+          profileUser.languages.map(lang => `<span class="language-tag">${lang}</span>`).join('');
+      } else {
+        document.getElementById('profileLanguages').innerHTML = '<p>No languages specified</p>';
+      }
+      
+      // Set up message button
+      document.getElementById('sendMessageBtn').href = `/messages.html?user=${profileUser._id}`;
+    }
+    
+    async function checkFriendshipStatus() {
+      try {
+        const response = await fetch(`/api/friends/status?user=${profileUser._id}`);
+        const status = await response.json();
+        
+        isFriend = status.isFriend;
+        friendRequestSent = status.friendRequestSent;
+        
+        updateFriendButton();
+      } catch (err) {
+        console.error('Error checking friendship status:', err);
+      }
+    }
+    
+    function updateFriendButton() {
+      const btn = document.getElementById('addFriendBtn');
+      
+      if (isFriend) {
+        btn.innerHTML = '<i class="fas fa-user-check"></i> Friends';
+        btn.classList.add('button-secondary');
+        btn.classList.remove('button-primary');
+      } else if (friendRequestSent) {
+        btn.innerHTML = '<i class="fas fa-clock"></i> Request Sent';
+        btn.classList.add('button-secondary');
+        btn.classList.remove('button-primary');
+        btn.disabled = true;
+      } else {
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> Add Friend';
+        btn.classList.add('button-primary');
+        btn.classList.remove('button-secondary');
+        btn.disabled = false;
+      }
+    }
+    
+    async function handleFriendAction() {
+      if (isFriend) {
+        if (confirm(`Are you sure you want to remove ${profileUser.name} from your friends?`)) {
+          await removeFriend();
+        }
+      } else {
+        await sendFriendRequest();
+      }
+    }
+    
+    async function sendFriendRequest() {
+      try {
+        const response = await fetch('/api/friend-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: profileUser._id })
+        });
+        
+        if (response.ok) {
+          friendRequestSent = true;
+          updateFriendButton();
+          alert(`Friend request sent to ${profileUser.name}!`);
+        }
+      } catch (err) {
+        console.error('Error sending friend request:', err);
+        alert('Error sending friend request');
+      }
+    }
+    
+    async function removeFriend() {
+      try {
+        const response = await fetch(`/api/friends/remove?user=${profileUser._id}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          isFriend = false;
+          updateFriendButton();
+          alert(`${profileUser.name} has been removed from your friends.`);
+        }
+      } catch (err) {
+        console.error('Error removing friend:', err);
+        alert('Error removing friend');
+      }
+    }
+    
+    async function blockUser() {
+      try {
+        const response = await fetch('/api/user/block', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: profileUser._id })
+        });
+        
+        if (response.ok) {
+          alert(`${profileUser.name} has been blocked.`);
+          window.location.href = '/friends.html';
+        }
+      } catch (err) {
+        console.error('Error blocking user:', err);
+        alert('Error blocking user');
+      } finally {
+        document.getElementById('blockModal').style.display = 'none';
+      }
+    }
+    
+    async function reportUser() {
+      try {
+        const reason = document.getElementById('reportReason').value;
+        const details = document.getElementById('reportDetails').value;
+        
+        const response = await fetch('/api/user/report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            userId: profileUser._id,
+            reason,
+            details
+          })
+        });
+        
+        if (response.ok) {
+          alert('Thank you for your report. We will review it shortly.');
+          document.getElementById('reportModal').style.display = 'none';
+        }
+      } catch (err) {
+        console.error('Error reporting user:', err);
+        alert('Error reporting user');
+      }
+    }
+    
+    async function postComment() {
+      const commentInput = document.getElementById('commentInput');
+      const content = commentInput.value.trim();
+      
+      if (!content) return;
+      
+      try {
+        const response = await fetch('/api/comments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: profileUser._id,
+            content
+          })
+        });
+        
+        if (response.ok) {
+          commentInput.value = '';
+          await loadComments();
+        }
+      } catch (err) {
+        console.error('Error posting comment:', err);
+        alert('Error posting comment');
+      }
+    }
+    
+    async function loadComments() {
+      try {
+        const response = await fetch(`/api/comments?user=${profileUser._id}`);
+        const comments = await response.json();
+        
+        if (comments.length === 0) {
+          document.getElementById('commentsList').innerHTML = '<p>No comments yet</p>';
+          return;
+        }
+        
+        const html = comments.map(comment => `
+          <div class="comment">
+            <img src="${comment.author.profilePicture || '/images/default-avatar.png'}" class="comment-avatar">
+            <div class="comment-content">
+              <div class="comment-header">
+                <strong>${comment.author.name}</strong>
+                <small>${timeSince(comment.createdAt)} ago</small>
+              </div>
+              <p>${comment.content}</p>
+            </div>
+          </div>
+        `).join('');
+        
+        document.getElementById('commentsList').innerHTML = html;
+      } catch (err) {
+        console.error('Error loading comments:', err);
+        document.getElementById('commentsList').innerHTML = '<p>Error loading comments</p>';
+      }
+    }
+    
+    function timeSince(dateString) {
+      const date = new Date(dateString);
+      const seconds = Math.floor((new Date() - date) / 1000);
+      
+      let interval = Math.floor(seconds / 31536000);
+      if (interval >= 1) return interval + " year" + (interval === 1 ? "" : "s");
+      
+      interval = Math.floor(seconds / 2592000);
+      if (interval >= 1) return interval + " month" + (interval === 1 ? "" : "s");
+      
+      interval = Math.floor(seconds / 86400);
+      if (interval >= 1) return interval + " day" + (interval === 1 ? "" : "s");
+      
+      interval = Math.floor(seconds / 3600);
+      if (interval >= 1) return interval + " hour" + (interval === 1 ? "" : "s");
+      
+      interval = Math.floor(seconds / 60);
+      if (interval >= 1) return interval + " minute" + (interval === 1 ? "" : "s");
+      
+      return Math.floor(seconds) + " second" + (seconds === 1 ? "" : "s");
+    }
+  </script>
+</body>
+</html>

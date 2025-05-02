@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - PenPalmega</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">PenPalmega</a>
+    <div class="user-menu">
+      <a href="/login.html" class="button button-small">Login</a>
+      <a href="/signup.html" class="button button-small button-secondary">Sign Up</a>
+    </div>
+  </header>
+  
+  <nav>
+    <a href="/">Home</a>
+    <a href="/signup.html">Sign Up</a>
+    <a href="/login.html">Login</a>
+    <a href="/help.html">Help</a>
+    <a href="/about.html">About Us</a>
+  </nav>
+  
+  <main>
+    <div class="container" style="max-width: 500px;">
+      <h1>Welcome Back</h1>
+      <p>Login to connect with your pen pals</p>
+      
+      <form id="loginForm" class="form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+        
+        <div class="form-group" style="text-align: right;">
+          <a href="#" style="font-size: 0.9rem;">Forgot password?</a>
+        </div>
+        
+        <button type="submit" class="button button-block">Login</button>
+      </form>
+      
+      <p style="text-align: center; margin-top: 1rem;">
+        Don't have an account? <a href="/signup.html">Sign up</a>
+      </p>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="social-links">
+      <a href="#"><i class="fab fa-facebook"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-youtube"></i></a>
+    </div>
+    <p>Contact: <a href="mailto:info@penpalmega.com">info@penpalmega.com</a></p>
+    <p>&copy; 2023 PenPalmega. All rights reserved.</p>
+  </footer>
+  
+  <script src="/script.js"></script>
+  <script>
+  document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    try {
+      const response = await fetch('/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (response.ok) {
+        // Login successful, redirect to dashboard
+        window.location.href = '/userdashboard.html';
+      } else {
+        const result = await response.json();
+        alert(result.message || 'Login failed. Please try again.');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      alert('An error occurred. Please try again later.');
+    }
+  });
+</script>
+
+</body>
+</html>

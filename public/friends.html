@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Friends - PenPalmega</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">PenPalmega</a>
+    <div class="user-menu">
+      <button class="user-menu-btn">
+        <span id="usernameDisplay">User</span>
+        <i class="fas fa-caret-down"></i>
+        <span id="notification-badge" class="notification-badge"></span>
+      </button>
+      <div class="user-dropdown">
+        <a href="/userdashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="/messages.html"><i class="fas fa-envelope"></i> Messages <span id="messageNotifications"></span></a>
+        <a href="/friends.html"><i class="fas fa-users"></i> Friends <span id="friendRequests"></span></a>
+        <a href="/settings.html"><i class="fas fa-cog"></i> Settings</a>
+        <a href="#" id="logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+  </header>
+  
+  <nav>
+    <a href="/userdashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="/find-penpals.html"><i class="fas fa-search"></i> Find Pen Pals</a>
+    <a href="/messages.html"><i class="fas fa-envelope"></i> Messages</a>
+    <a href="/news-updates.html"><i class="fas fa-newspaper"></i> News</a>
+    <a href="/friends.html" class="active"><i class="fas fa-users"></i> Friends</a>
+  </nav>
+  
+  <main>
+    <div class="container">
+      <h1>Friends</h1>
+      
+      <div class="tabs">
+        <button class="tab-button active" data-tab="friends">My Friends</button>
+        <button class="tab-button" data-tab="requests">Friend Requests</button>
+        <button class="tab-button" data-tab="suggestions">Suggestions</button>
+      </div>
+      
+      <div id="friendsTab" class="tab-content active">
+        <div class="card">
+          <div id="friendsList">
+            <p>Loading your friends...</p>
+          </div>
+        </div>
+      </div>
+      
+      <div id="requestsTab" class="tab-content">
+        <div class="card">
+          <div id="requestsList">
+            <p>Loading friend requests...</p>
+          </div>
+        </div>
+      </div>
+      
+      <div id="suggestionsTab" class="tab-content">
+        <div class="card">
+          <div id="suggestionsList">
+            <p>Loading suggestions...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="social-links">
+      <a href="#"><i class="fab fa-facebook"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-youtube"></i></a>
+    </div>
+    <p>Contact: <a href="mailto:info@penpalmega.com">info@penpalmega.com</a></p>
+    <p>&copy; 2023 PenPalmega. All rights reserved.</p>
+  </footer>
+  
+  <script src="/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load user data
+      const user = await fetchUserData();
+      if (!user) return;
+      
+      document.getElementById('usernameDisplay').textContent = user.name;
+      
+      // Set up tab switching
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+          const tabId = button.dataset.tab;
+          
+          // Update active tab button
+          document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active');
+          });
+          button.classList.add('active');
+          
+          // Update active tab content
+          document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+          });
+          document.getElementById(`${tabId}Tab`).classList.add('active');
+          
+          // Load content for the tab if empty
+          if (tabId === 'friends' && document.getElementById('friendsList').children.length === 1) {
+            loadFriends();
+          } else if (tabId === 'requests' && document.getElementById('requestsList').children.length === 1) {
+            loadFriendRequests();
+          } else if (tabId === 'suggestions' && document.getElementById('suggestionsList').children.length === 1) {
+            loadFriendSuggestions();
+          }
+        });
+      });
+      
+      // Load initial tab
+      loadFriends();
+      
+      // Set up logout
+      document.getElementById('logout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await fetch('/logout', { method: 'GET' });
+        window.location.href = '/login.html';
+      });
+    });
+    
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/user');
+        if (!response.ok) {
+          window.location.href = '/login.html';
+          return null;
+        }
+        return await response.json();
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        window.location.href = '/login.html';
+        return null;
+      }
+    }
+    
+    async function loadFriends() {
+      try {
+        const response = await fetch('/api/friends');
+        const friends = await response.json();
+        
+        if (friends.length === 0) {
+          document.getElementById('friendsList').innerHTML = '<p>You have no friends yet. Start by finding pen pals!</p>';
+          return;
+        }
+        
+        const html = friends.map(friend => {
+          const friendUser = friend.from._id === user._id ? friend.to : friend.from;
+          
+          return `
+            <div class="friend-item">
+              <img src="${friendUser.profilePicture || '/images/default-avatar.png'}" class="friend-avatar">
+              <div class="friend-info">
+                <h3>${friendUser.name}</h3>
+                <p>${friendUser.city ? friendUser.city + ', ' : ''}${friendUser.country || ''}</p>
+                <p>Friends since ${new Date(friend.createdAt).toLocaleDateString()}</p>
+              </div>
+              <div class="friend-actions">
+                <a href="/messages.html?user=${friendUser._id}" class="button button-small">
+                  <i class="fas fa-envelope"></i> Message
+                </a>
+                <button class="button button-small button-secondary remove-friend" data-friendid="${friend._id}">
+                  <i class="fas fa-user-times"></i> Remove
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        document.getElementById('friendsList').innerHTML = html;
+        
+        // Add event listeners for remove buttons
+        document.querySelectorAll('.remove-friend').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const friendId = e.target.closest('.remove-friend').dataset.friendid;
+            if (confirm('Are you sure you want to remove this friend?')) {
+              await removeFriend(friendId);
+            }
+          });
+        });
+      } catch (err) {
+        console.error('Error loading friends:', err);
+        document.getElementById('friendsList').innerHTML = '<p>Error loading friends</p>';
+      }
+    }
+    
+    async function loadFriendRequests() {
+      try {
+        const response = await fetch('/api/friend-requests');
+        const requests = await response.json();
+        
+        if (requests.length === 0) {
+          document.getElementById('requestsList').innerHTML = '<p>No pending friend requests</p>';
+          return;
+        }
+        
+        const html = requests.map(request => `
+          <div class="request-item">
+            <img src="${request.from.profilePicture || '/images/default-avatar.png'}" class="request-avatar">
+            <div class="request-info">
+              <h3>${request.from.name}</h3>
+              <p>${request.from.city ? request.from.city + ', ' : ''}${request.from.country || ''}</p>
+              <small>Request sent on ${new Date(request.createdAt).toLocaleDateString()}</small>
+            </div>
+            <div class="request-actions">
+              <button class="button button-small accept-request" data-requestid="${request._id}">
+                <i class="fas fa-check"></i> Accept
+              </button>
+              <button class="button button-small button-secondary reject-request" data-requestid="${request._id}">
+                <i class="fas fa-times"></i> Reject
+              </button>
+            </div>
+          </div>
+        `).join('');
+        
+        document.getElementById('requestsList').innerHTML = html;
+        
+        // Add event listeners for accept/reject buttons
+        document.querySelectorAll('.accept-request').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const requestId = e.target.closest('.accept-request').dataset.requestid;
+            await respondToFriendRequest(requestId, 'accepted');
+          });
+        });
+        
+        document.querySelectorAll('.reject-request').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const requestId = e.target.closest('.reject-request').dataset.requestid;
+            await respondToFriendRequest(requestId, 'rejected');
+          });
+        });
+      } catch (err) {
+        console.error('Error loading friend requests:', err);
+        document.getElementById('requestsList').innerHTML = '<p>Error loading friend requests</p>';
+      }
+    }
+    
+    async function loadFriendSuggestions() {
+      try {
+        const response = await fetch('/api/search?limit=6');
+        const suggestions = await response.json();
+        
+        if (suggestions.length === 0) {
+          document.getElementById('suggestionsList').innerHTML = '<p>No suggestions available</p>';
+          return;
+        }
+        
+        const html = suggestions.map(user => `
+          <div class="suggestion-item">
+            <img src="${user.profilePicture || '/images/default-avatar.png'}" class="suggestion-avatar">
+            <div class="suggestion-info">
+              <h3>${user.name}</h3>
+              <p>${user.city ? user.city + ', ' : ''}${user.country || ''}</p>
+              <p>${user.description ? user.description.substring(0, 50) + '...' : ''}</p>
+            </div>
+            <div class="suggestion-actions">
+              <button class="button button-small send-request" data-userid="${user._id}">
+                <i class="fas fa-user-plus"></i> Add Friend
+              </button>
+              <a href="/view-profile.html?id=${user._id}" class="button button-small button-secondary">
+                <i class="fas fa-eye"></i> View Profile
+              </a>
+            </div>
+          </div>
+        `).join('');
+        
+        document.getElementById('suggestionsList').innerHTML = html;
+        
+        // Add event listeners for send request buttons
+        document.querySelectorAll('.send-request').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const userId = e.target.closest('.send-request').dataset.userid;
+            await sendFriendRequest(userId);
+          });
+        });
+      } catch (err) {
+        console.error('Error loading suggestions:', err);
+        document.getElementById('suggestionsList').innerHTML = '<p>Error loading suggestions</p>';
+      }
+    }
+    
+    async function respondToFriendRequest(requestId, status) {
+      try {
+        await fetch(`/api/friend-request/${requestId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        
+        // Reload requests and friends list
+        await loadFriendRequests();
+        await loadFriends();
+        
+        // Update notifications
+        updateNotifications();
+      } catch (err) {
+        console.error('Error responding to friend request:', err);
+        alert('Error responding to friend request');
+      }
+    }
+    
+    async function sendFriendRequest(userId) {
+      try {
+        await fetch('/api/friend-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: userId })
+        });
+        
+        alert('Friend request sent!');
+        await loadFriendSuggestions();
+      } catch (err) {
+        console.error('Error sending friend request:', err);
+        alert('Error sending friend request');
+      }
+    }
+    
+    async function removeFriend(friendId) {
+      try {
+        await fetch(`/api/friends/${friendId}`, { method: 'DELETE' });
+        await loadFriends();
+      } catch (err) {
+        console.error('Error removing friend:', err);
+        alert('Error removing friend');
+      }
+    }
+    
+    function updateNotifications() {
+      // This would be handled by the Notifications class
+      // Included here for completeness
+    }
+  </script>
+</body>
+</html>
